@@ -1,6 +1,11 @@
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { prisma } from "../prisma";
-import { EmailAlreadyInUseError } from "./../errors/auth-errors";
+import {
+  EmailAlreadyInUseError,
+  InvalidCredentialsError,
+} from "./../errors/auth-errors";
+import { JWT_SECRET } from "../index";
 
 class AuthService {
   async register(email: string, password: string) {
@@ -25,6 +30,55 @@ class AuthService {
       id: user.id,
       email: user.email,
       createdAt: user.createdAt,
+    };
+  }
+
+  async login(email: string, password: string) {
+    const normalizedEmail = email.toLowerCase();
+
+    const user = await prisma.user.findUnique({
+      where: {
+        email: normalizedEmail,
+      },
+    });
+
+    if (!user) {
+      console.warn("Login failed: user not found", {
+        route: "/auth/login",
+        method: "POST",
+        email,
+      });
+
+      throw new InvalidCredentialsError();
+    }
+
+    const isPassEqual = await bcrypt.compare(password, user.password);
+
+    if (!isPassEqual) {
+      console.warn("Login failed: wrong password", {
+        route: "/auth/login",
+        method: "POST",
+        userId: user.id,
+      });
+
+      throw new InvalidCredentialsError();
+    }
+
+    const payload = { id: user.id };
+    const token = jwt.sign(payload, JWT_SECRET!, {
+      expiresIn: "15m",
+    });
+
+    console.info("User logged in successfully", {
+      route: "/auth/login",
+      method: "POST",
+      userId: user.id,
+    });
+
+    return {
+      accessToken: token,
+      id: user.id,
+      email: user.email,
     };
   }
 }
