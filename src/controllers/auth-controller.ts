@@ -1,15 +1,16 @@
 import { Request, Response } from "express";
 import authService from "../services/auth-services";
 import * as z from "zod";
+import { EmailAlreadyInUseError } from "../errors/auth-errors";
 
-const authSchema = z.object({
+const authCredentialsSchema = z.object({
   email: z.email(),
   password: z.string().min(6),
 });
 
 const register = async (req: Request, res: Response) => {
   try {
-    const result = authSchema.safeParse(req.body);
+    const result = authCredentialsSchema.safeParse(req.body);
 
     if (!result.success) {
       console.warn("Login validation failed", {
@@ -27,6 +28,9 @@ const register = async (req: Request, res: Response) => {
       .status(201)
       .json({ id: user.id, email: user.email, createdAt: user.createdAt });
   } catch (error) {
+    if (error instanceof EmailAlreadyInUseError) {
+      return res.status(409).json({ error: error.message });
+    }
     return res.status(500).json({ error: "Server error" });
   }
 };
