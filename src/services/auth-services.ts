@@ -5,7 +5,7 @@ import {
   EmailAlreadyInUseError,
   InvalidCredentialsError,
 } from "./../errors/auth-errors";
-import { JWT_SECRET } from "../index";
+import { config } from "../index";
 
 class AuthService {
   async register(email: string, password: string) {
@@ -65,7 +65,7 @@ class AuthService {
     }
 
     const payload = { id: user.id };
-    const token = jwt.sign(payload, JWT_SECRET!, {
+    const token = jwt.sign(payload, config.jwtSecret, {
       expiresIn: "30m",
     });
 
