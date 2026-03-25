@@ -1,6 +1,11 @@
 import express, { NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
-import { register, login, refreshSession } from "./controllers/auth-controller";
+import {
+  register,
+  login,
+  refreshSession,
+  logout,
+} from "./controllers/auth-controller";
 import { getProfile } from "./controllers/user-controller";
 import { authMiddleware } from "./middleware/auth-middleware";
 
@@ -27,6 +32,7 @@ app.use(express.json());
 app.post("/auth/register", register);
 app.post("/auth/login", login);
 app.post("/auth/refresh", refreshSession);
+app.post("/auth/logout", logout);
 app.get("/me", authMiddleware, getProfile);
 
 const PORT = process.env.PORT || 3000;

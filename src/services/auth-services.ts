@@ -104,6 +104,25 @@ class AuthService {
     const accessToken = tokenService.generateAccessToken({ id: user.id });
     return accessToken;
   }
+
+  async logout(refreshToken: string) {
+    const data = tokenService.validateRefreshToken(refreshToken);
+
+    if (!data || typeof data !== "object" || typeof data.id !== "string") {
+      throw new UnauthorizedError();
+    }
+    const userId = data.id;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedError();
+    }
+  }
 }
 
 export default new AuthService();

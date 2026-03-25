@@ -81,12 +81,14 @@ const refreshSession = async (req: Request, res: Response) => {
     const result = refreshTokenSchema.safeParse(req.body);
 
     if (!result.success) {
-      console.warn("Refresh token missing", {
+      console.warn("Logout request validation failed", {
         route: "/auth/refresh",
         method: req.method,
         errors: result.error.issues.map((e) => e.message),
       });
-      return res.status(400).json({ error: "Refresh token missing" });
+      return res
+        .status(400)
+        .json({ error: "Logout request validation failed" });
     }
 
     const { refreshToken } = result.data;
@@ -102,4 +104,29 @@ const refreshSession = async (req: Request, res: Response) => {
   }
 };
 
-export { register, login, refreshSession };
+const logout = async (req: Request, res: Response) => {
+  try {
+    const result = refreshTokenSchema.safeParse(req.body);
+
+    if (!result.success) {
+      console.warn("Invalid Refresh token", {
+        route: "/auth/logout",
+        method: req.method,
+        errors: result.error.issues.map((e) => e.message),
+      });
+      return res.status(400).json({ error: "Invalid input" });
+    }
+
+    const { refreshToken } = result.data;
+
+    await authServices.logout(refreshToken);
+
+    return res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return res.status(401).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "Server error" });
+  }
+};
+export { register, login, refreshSession, logout };
