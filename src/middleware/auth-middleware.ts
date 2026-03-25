@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { config } from "..";
+import tokenService from "../services/token-service";
 import { extractBearerToken } from "../helpers";
 
 export const authMiddleware = (
@@ -20,15 +19,9 @@ export const authMiddleware = (
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  let data;
+  const data = tokenService.validateAccessToken(accessToken);
 
-  try {
-    data = jwt.verify(accessToken, config.jwtSecret);
-  } catch (error) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  if (typeof data !== "object" || typeof data.id !== "string") {
+  if (!data || typeof data !== "object" || typeof data.id !== "string") {
     return res.status(401).json({ error: "Unauthorized" });
   }
 

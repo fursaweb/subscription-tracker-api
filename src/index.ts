@@ -1,18 +1,24 @@
 import express, { NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
-import { register, login } from "./controllers/auth-controller";
+import { register, login, refreshSession } from "./controllers/auth-controller";
 import { getProfile } from "./controllers/user-controller";
 import { authMiddleware } from "./middleware/auth-middleware";
 
 dotenv.config();
-const jwtSecret = process.env.JWT_SECRET;
+const jwtAccessSecret = process.env.JWT_ACCESS_SECRET;
+const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET;
 
-if (!jwtSecret) {
-  throw new Error("JWT_SECRET is not defined");
+if (!jwtAccessSecret) {
+  throw new Error("JWT_ACCESS_SECRET is not defined");
+}
+
+if (!jwtRefreshSecret) {
+  throw new Error("JWT_REFRESH_SECRET is not defined");
 }
 
 export const config = {
-  jwtSecret,
+  jwtAccessSecret,
+  jwtRefreshSecret,
 };
 
 const app = express();
@@ -20,6 +26,7 @@ app.use(express.json());
 
 app.post("/auth/register", register);
 app.post("/auth/login", login);
+app.post("/auth/refresh", refreshSession);
 app.get("/me", authMiddleware, getProfile);
 
 const PORT = process.env.PORT || 3000;

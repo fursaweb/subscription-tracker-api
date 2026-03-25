@@ -1,11 +1,11 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { prisma } from "../prisma";
+import tokenService from "../services/token-service";
 import {
   EmailAlreadyInUseError,
   InvalidCredentialsError,
+  UnauthorizedError,
 } from "./../errors/auth-errors";
-import { config } from "../index";
 
 class AuthService {
   async register(email: string, password: string) {
@@ -65,9 +65,9 @@ class AuthService {
     }
 
     const payload = { id: user.id };
-    const token = jwt.sign(payload, config.jwtSecret, {
-      expiresIn: "30m",
-    });
+
+    const accessToken = tokenService.generateAccessToken(payload);
+    const refreshToken = tokenService.generateRefreshToken(payload);
 
     console.info("User logged in successfully", {
       route: "/auth/login",
@@ -76,10 +76,33 @@ class AuthService {
     });
 
     return {
-      accessToken: token,
+      accessToken,
+      refreshToken,
       id: user.id,
       email: user.email,
     };
+  }
+
+  async refreshAccessToken(refreshToken: string) {
+    const data = tokenService.validateRefreshToken(refreshToken);
+    if (!data || typeof data !== "object" || typeof data.id !== "string") {
+      throw new UnauthorizedError();
+    }
+
+    const userId = data.id;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedError();
+    }
+
+    const accessToken = tokenService.generateAccessToken({ id: user.id });
+    return accessToken;
   }
 }
 

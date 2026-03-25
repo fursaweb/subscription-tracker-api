@@ -3,6 +3,7 @@ import * as z from "zod";
 import {
   EmailAlreadyInUseError,
   InvalidCredentialsError,
+  UnauthorizedError,
 } from "../errors/auth-errors";
 import authServices from "../services/auth-services";
 
@@ -10,6 +11,8 @@ const authCredentialsSchema = z.object({
   email: z.email(),
   password: z.string().min(6),
 });
+
+const refreshTokenSchema = z.object({ refreshToken: z.jwt() });
 
 const register = async (req: Request, res: Response) => {
   try {
@@ -73,4 +76,30 @@ const login = async (req: Request, res: Response) => {
   }
 };
 
-export { register, login };
+const refreshSession = async (req: Request, res: Response) => {
+  try {
+    const result = refreshTokenSchema.safeParse(req.body);
+
+    if (!result.success) {
+      console.warn("Refresh token missing", {
+        route: "/auth/refresh",
+        method: req.method,
+        errors: result.error.issues.map((e) => e.message),
+      });
+      return res.status(400).json({ error: "Refresh token missing" });
+    }
+
+    const { refreshToken } = result.data;
+
+    const accessToken = await authServices.refreshAccessToken(refreshToken);
+
+    return res.status(200).json({ accessToken });
+  } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return res.status(401).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "Server error" });
+  }
+};
+
+export { register, login, refreshSession };
