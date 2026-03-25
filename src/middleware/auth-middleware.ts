@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { config } from "..";
 import { extractBearerToken } from "../helpers";
 
@@ -28,12 +28,11 @@ export const authMiddleware = (
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  if (typeof data !== "object" || !data.id || typeof data.id !== "string") {
+  if (typeof data !== "object" || typeof data.id !== "string") {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const userId = data.id;
-  req.userId = userId;
+  req.userId = data.id;
 
   next();
 };

@@ -13,7 +13,7 @@ export class InvalidCredentialsError extends Error {
 }
 
 export class UnauthorizedError extends Error {
-  constructor(message = "Invalid credentials") {
+  constructor(message = "Unauthorized") {
     super(message);
     this.name = "Unauthorized";
   }
