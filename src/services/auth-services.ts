@@ -64,7 +64,19 @@ class AuthService {
       throw new InvalidCredentialsError();
     }
 
-    const payload = { id: user.id };
+    const SESSION_LIFETIME_DAYS = 7;
+    const expiresAt = new Date(
+      Date.now() + SESSION_LIFETIME_DAYS * 24 * 60 * 60 * 1000,
+    );
+
+    const session = await prisma.session.create({
+      data: {
+        userId: user.id,
+        expiresAt,
+      },
+    });
+
+    const payload = { userId: user.id, sessionId: session.id };
 
     const accessToken = tokenService.generateAccessToken(payload);
     const refreshToken = tokenService.generateRefreshToken(payload);
@@ -101,8 +113,27 @@ class AuthService {
       throw new UnauthorizedError();
     }
 
-    const accessToken = tokenService.generateAccessToken({ id: user.id });
+    const accessToken = tokenService.generateAccessToken({ userId: user.id });
     return accessToken;
+  }
+
+  async logout(refreshToken: string) {
+    const data = tokenService.validateRefreshToken(refreshToken);
+
+    if (!data || typeof data !== "object" || typeof data.id !== "string") {
+      throw new UnauthorizedError();
+    }
+    const userId = data.id;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedError();
+    }
   }
 }
 
