@@ -97,23 +97,38 @@ class AuthService {
 
   async refreshAccessToken(refreshToken: string) {
     const data = tokenService.validateRefreshToken(refreshToken);
-    if (!data || typeof data !== "object" || typeof data.id !== "string") {
+    if (
+      !data ||
+      typeof data !== "object" ||
+      typeof data.userId !== "string" ||
+      typeof data.sessionId !== "string"
+    ) {
       throw new UnauthorizedError();
     }
 
-    const userId = data.id;
+    const userId = data.userId;
+    const sessionId = data.sessionId;
 
-    const user = await prisma.user.findUnique({
+    const session = await prisma.session.findUnique({
       where: {
-        id: userId,
+        id: sessionId,
       },
     });
 
-    if (!user) {
+    if (!session || session.userId !== userId) {
       throw new UnauthorizedError();
     }
 
-    const accessToken = tokenService.generateAccessToken({ userId: user.id });
+    const now = new Date();
+
+    if (session.revokedAt !== null || session.expiresAt <= now) {
+      throw new UnauthorizedError();
+    }
+
+    const accessToken = tokenService.generateAccessToken({
+      userId,
+      sessionId: session.id,
+    });
     return accessToken;
   }
 
