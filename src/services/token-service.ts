@@ -1,13 +1,13 @@
 import jwt from "jsonwebtoken";
 import { config } from "../index";
 
-type Payload = { id: string };
+type Payload = { userId: string; sessionId: string };
 type Token = string;
 
 class TokenService {
   generateAccessToken(payload: Payload) {
     const accessToken = jwt.sign(payload, config.jwtAccessSecret, {
-      expiresIn: "30m",
+      expiresIn: "15m",
     });
 
     return accessToken;
@@ -15,7 +15,7 @@ class TokenService {
 
   generateRefreshToken(payload: Payload) {
     const refreshToken = jwt.sign(payload, config.jwtRefreshSecret, {
-      expiresIn: "30d",
+      expiresIn: "7d",
     });
 
     return refreshToken;

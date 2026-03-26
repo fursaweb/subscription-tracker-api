@@ -17,4 +17,17 @@ model User {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
+
+  sessions  Session[]
+}
+
+model Session {
+  id        String @id @default(cuid())
+  userId    String 
+  user      User      @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  expiresAt DateTime 
+  revokedAt DateTime?
+
+  @@index([userId, revokedAt])
 }
