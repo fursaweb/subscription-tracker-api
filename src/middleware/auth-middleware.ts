@@ -21,11 +21,17 @@ export const authMiddleware = (
 
   const data = tokenService.validateAccessToken(accessToken);
 
-  if (!data || typeof data !== "object" || typeof data.id !== "string") {
+  if (
+    !data ||
+    typeof data !== "object" ||
+    typeof data.userId !== "string" ||
+    typeof data.sessionId !== "string"
+  ) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  req.userId = data.id;
+  req.userId = data.userId;
+  req.sessionId = data.sessionId;
 
   next();
 };

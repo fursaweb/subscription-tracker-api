@@ -24,6 +24,7 @@ if (!jwtRefreshSecret) {
 export const config = {
   jwtAccessSecret,
   jwtRefreshSecret,
+  sessionLifetimeDays: 7,
 };
 
 const app = express();

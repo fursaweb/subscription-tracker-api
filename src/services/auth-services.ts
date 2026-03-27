@@ -6,6 +6,7 @@ import {
   InvalidCredentialsError,
   UnauthorizedError,
 } from "./../errors/auth-errors";
+import { config } from "../index";
 
 class AuthService {
   async register(email: string, password: string) {
@@ -64,9 +65,8 @@ class AuthService {
       throw new InvalidCredentialsError();
     }
 
-    const SESSION_LIFETIME_DAYS = 7;
     const expiresAt = new Date(
-      Date.now() + SESSION_LIFETIME_DAYS * 24 * 60 * 60 * 1000,
+      Date.now() + config.sessionLifetimeDays * 24 * 60 * 60 * 1000,
     );
 
     const session = await prisma.session.create({
@@ -97,12 +97,7 @@ class AuthService {
 
   async refreshAccessToken(refreshToken: string) {
     const data = tokenService.validateRefreshToken(refreshToken);
-    if (
-      !data ||
-      typeof data !== "object" ||
-      typeof data.userId !== "string" ||
-      typeof data.sessionId !== "string"
-    ) {
+    if (!data) {
       throw new UnauthorizedError();
     }
 
@@ -134,21 +129,36 @@ class AuthService {
 
   async logout(refreshToken: string) {
     const data = tokenService.validateRefreshToken(refreshToken);
-
-    if (!data || typeof data !== "object" || typeof data.id !== "string") {
+    if (!data) {
       throw new UnauthorizedError();
     }
-    const userId = data.id;
 
-    const user = await prisma.user.findUnique({
+    const sessionId = data.sessionId;
+    const userId = data.userId;
+    const now = new Date();
+
+    const session = await prisma.session.findUnique({
       where: {
-        id: userId,
+        id: sessionId,
       },
     });
 
-    if (!user) {
+    if (!session || session.userId !== userId) {
       throw new UnauthorizedError();
     }
+
+    if (session.revokedAt !== null || session.expiresAt <= now) {
+      throw new UnauthorizedError();
+    }
+
+    await prisma.session.update({
+      where: {
+        id: sessionId,
+      },
+      data: {
+        revokedAt: now,
+      },
+    });
   }
 }
 
