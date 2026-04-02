@@ -5,7 +5,7 @@ import {
   InvalidCredentialsError,
   UnauthorizedError,
 } from "../errors/auth-errors";
-import authServices from "../services/auth-services";
+import authServices from "../services/auth-service";
 
 const authCredentialsSchema = z.object({
   email: z.email(),
