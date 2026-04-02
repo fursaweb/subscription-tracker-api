@@ -59,4 +59,24 @@ const createSubscription = async (req: Request, res: Response) => {
   }
 };
 
-export { createSubscription };
+const getSubscriptions = async (req: Request, res: Response) => {
+  try {
+    if (!req.userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const subscriptions = await subscriptionService.getSubscriptions(
+      req.userId,
+    );
+    return res.status(200).json(subscriptions);
+  } catch (error) {
+    console.error("Get subscriptions failed", {
+      route: "/subscriptions",
+      method: req.method,
+      error,
+    });
+    return res.status(500).json({ error: "Server error" });
+  }
+};
+
+export { createSubscription, getSubscriptions };

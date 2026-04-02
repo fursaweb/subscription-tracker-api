@@ -22,5 +22,18 @@ class SubscriptionService {
 
     return subscription;
   }
+
+  async getSubscriptions(userId: string) {
+    const subscriptions = await prisma.subscription.findMany({
+      where: {
+        userId,
+      },
+      orderBy: {
+        nextBillingDate: "asc",
+      },
+    });
+
+    return subscriptions;
+  }
 }
 export default new SubscriptionService();

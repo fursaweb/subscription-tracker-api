@@ -7,7 +7,10 @@ import {
   logout,
 } from "./controllers/auth-controller";
 import { getProfile } from "./controllers/user-controller";
-import { createSubscription } from "./controllers/subscription-controller";
+import {
+  createSubscription,
+  getSubscriptions,
+} from "./controllers/subscription-controller";
 import { authMiddleware } from "./middleware/auth-middleware";
 
 dotenv.config();
@@ -37,6 +40,7 @@ app.post("/auth/refresh", refreshSession);
 app.post("/auth/logout", logout);
 
 app.post("/subscriptions", authMiddleware, createSubscription);
+app.get("/subscriptions", authMiddleware, getSubscriptions);
 
 app.get("/me", authMiddleware, getProfile);
 
