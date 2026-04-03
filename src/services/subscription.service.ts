@@ -35,5 +35,16 @@ class SubscriptionService {
 
     return subscriptions;
   }
+
+  async getSubscriptionById(userId: string, id: string) {
+    const subscription = await prisma.subscription.findFirst({
+      where: {
+        id,
+        userId,
+      },
+    });
+
+    return subscription;
+  }
 }
 export default new SubscriptionService();

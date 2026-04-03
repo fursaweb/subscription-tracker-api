@@ -14,6 +14,12 @@ const createSubscriptionSchema = z.object({
   }),
 });
 
+const subscriptionIdSchema = z.object({ id: z.cuid() });
+
 type CreateSubscriptionInput = z.infer<typeof createSubscriptionSchema>;
 
-export { createSubscriptionSchema, CreateSubscriptionInput };
+export {
+  createSubscriptionSchema,
+  subscriptionIdSchema,
+  CreateSubscriptionInput,
+};
