@@ -1,18 +1,14 @@
 import { Request, Response } from "express";
-import * as z from "zod";
 import {
   EmailAlreadyInUseError,
   InvalidCredentialsError,
   UnauthorizedError,
-} from "../errors/auth-errors";
-import authServices from "../services/auth-service";
-
-const authCredentialsSchema = z.object({
-  email: z.email(),
-  password: z.string().min(6),
-});
-
-const refreshTokenSchema = z.object({ refreshToken: z.jwt() });
+} from "../errors/auth.errors";
+import authServices from "../services/auth.service";
+import {
+  authCredentialsSchema,
+  refreshTokenSchema,
+} from "../schemas/auth.schema";
 
 const register = async (req: Request, res: Response) => {
   try {

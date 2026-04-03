@@ -1,41 +1,26 @@
 import { Response, Request } from "express";
-import * as z from "zod";
-import { isNotPastDate } from "../helpers";
-import subscriptionService from "../services/subscription-service";
-import { UnauthorizedError } from "../errors/auth-errors";
-
-const currency = ["UAH", "USD", "EUR"] as const;
-const billingCycle = ["MONTHLY", "YEARLY"] as const;
-
-const createSubscriptionSchema = z.object({
-  name: z.string().trim().nonempty("Name is required").max(100),
-  amount: z.number().gt(0, "Amount must be greater than 0"),
-  currency: z.enum(currency),
-  billingCycle: z.enum(billingCycle),
-  nextBillingDate: z.coerce.date().refine((date) => isNotPastDate(date), {
-    message: "Next billing date cannot be in the past",
-  }),
-});
-
-export type CreateSubscriptionInput = z.infer<typeof createSubscriptionSchema>;
+import { createSubscriptionSchema } from "../schemas/subscription.schema";
+import subscriptionService from "../services/subscription.service";
+import { UnauthorizedError } from "../errors/auth.errors";
+import { sendError } from "../utils/sendError";
 
 const createSubscription = async (req: Request, res: Response) => {
   try {
     const result = createSubscriptionSchema.safeParse(req.body);
 
     if (!result.success) {
+      const errors = result.error.issues.map((e) => e.message);
+
       console.warn("Create subscription validation failed", {
         route: "/subscriptions",
         method: req.method,
         errors: result.error.issues.map((e) => e.message),
       });
-      return res
-        .status(400)
-        .json({ error: result.error.issues.map((e) => e.message) });
+      return sendError(res, 400, "VALIDATION_ERROR", "Invalid input", errors);
     }
 
     if (!req.userId) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return sendError(res, 401, "UNAUTHORIZED", "Unauthorized");
     }
 
     const subscription = await subscriptionService.createSubscription(
@@ -46,7 +31,7 @@ const createSubscription = async (req: Request, res: Response) => {
     return res.status(201).json(subscription);
   } catch (error) {
     if (error instanceof UnauthorizedError) {
-      return res.status(401).json({ error: error.message });
+      return sendError(res, 401, "UNAUTHORIZED", error.message);
     }
 
     console.error("Create subscription failed", {
@@ -55,14 +40,14 @@ const createSubscription = async (req: Request, res: Response) => {
       error,
     });
 
-    return res.status(500).json({ error: "Server error" });
+    return sendError(res, 500, "SERVER_ERROR", "Server error");
   }
 };
 
 const getSubscriptions = async (req: Request, res: Response) => {
   try {
     if (!req.userId) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return sendError(res, 401, "UNAUTHORIZED", "Unauthorized");
     }
 
     const subscriptions = await subscriptionService.getSubscriptions(
@@ -75,7 +60,7 @@ const getSubscriptions = async (req: Request, res: Response) => {
       method: req.method,
       error,
     });
-    return res.status(500).json({ error: "Server error" });
+    return sendError(res, 500, "SERVER_ERROR", "Server error");
   }
 };
 

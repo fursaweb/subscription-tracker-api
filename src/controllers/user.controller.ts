@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import userService from "../services/user-service";
-import { UserNotFound } from "../errors/user-errors";
+import userService from "../services/user.service";
+import { UserNotFound } from "../errors/user.errors";
 
 export const getProfile = async (req: Request, res: Response) => {
   try {

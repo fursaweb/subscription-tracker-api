@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import { CreateSubscriptionInput } from "../controllers/subscription-controller";
+import { CreateSubscriptionInput } from "../schemas/subscription.schema";
 import { prisma } from "../prisma";
 
 class SubscriptionService {

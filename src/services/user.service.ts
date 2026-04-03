@@ -1,4 +1,4 @@
-import { UserNotFound } from "../errors/user-errors";
+import { UserNotFound } from "../errors/user.errors";
 import { prisma } from "../prisma";
 
 class UserService {
