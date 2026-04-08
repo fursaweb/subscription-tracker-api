@@ -12,7 +12,6 @@ import {
   getSubscriptions,
   getSubscriptionById,
   updateSubscription,
-  deleteSubscription,
   cancelSubscription,
 } from "./controllers/subscription.controller";
 import { authMiddleware } from "./middleware/auth.middleware";
