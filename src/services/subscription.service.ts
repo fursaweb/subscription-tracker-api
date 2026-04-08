@@ -1,5 +1,8 @@
 import Decimal from "decimal.js";
-import { CreateSubscriptionInput } from "../schemas/subscription.schema";
+import {
+  CreateSubscriptionInput,
+  UpdateSubscriptionInput,
+} from "../schemas/subscription.schema";
 import { prisma } from "../prisma";
 
 class SubscriptionService {
@@ -42,6 +45,32 @@ class SubscriptionService {
         id,
         userId,
       },
+    });
+
+    return subscription;
+  }
+
+  async updateSubscription(
+    userId: string,
+    id: string,
+    subscriptionData: UpdateSubscriptionInput,
+  ) {
+    const exists = await prisma.subscription.findFirst({
+      where: {
+        id,
+        userId,
+      },
+    });
+
+    if (!exists) {
+      return null;
+    }
+
+    const subscription = await prisma.subscription.update({
+      where: {
+        id,
+      },
+      data: subscriptionData,
     });
 
     return subscription;

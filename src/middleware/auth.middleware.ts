@@ -11,7 +11,7 @@ export const authMiddleware = (
   const authorizationHeader = req.headers.authorization;
 
   if (!authorizationHeader || typeof authorizationHeader !== "string") {
-    return res.status(401).json({ error: "Unauthorized" });
+    return sendError(res, 401, "UNAUTHORIZED", "Unauthorized");
   }
 
   const accessToken = extractBearerToken(authorizationHeader);

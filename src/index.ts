@@ -11,6 +11,7 @@ import {
   createSubscription,
   getSubscriptions,
   getSubscriptionById,
+  updateSubscription,
 } from "./controllers/subscription.controller";
 import { authMiddleware } from "./middleware/auth.middleware";
 
@@ -43,6 +44,7 @@ app.post("/auth/logout", logout);
 app.post("/subscriptions", authMiddleware, createSubscription);
 app.get("/subscriptions", authMiddleware, getSubscriptions);
 app.get("/subscriptions/:id", authMiddleware, getSubscriptionById);
+app.patch("/subscriptions/:id", authMiddleware, updateSubscription);
 
 app.get("/me", authMiddleware, getProfile);
 
