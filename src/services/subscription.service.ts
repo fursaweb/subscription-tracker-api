@@ -75,5 +75,29 @@ class SubscriptionService {
 
     return subscription;
   }
+
+  async cancelSubscription(userId: string, id: string) {
+    const exists = await prisma.subscription.findFirst({
+      where: {
+        id,
+        userId,
+      },
+    });
+
+    if (!exists) {
+      return null;
+    }
+
+    const subscription = await prisma.subscription.update({
+      where: {
+        id,
+      },
+      data: {
+        status: "CANCELLED",
+      },
+    });
+
+    return subscription;
+  }
 }
 export default new SubscriptionService();

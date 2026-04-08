@@ -170,9 +170,49 @@ const updateSubscription = async (req: Request, res: Response) => {
   }
 };
 
+const cancelSubscription = async (req: Request, res: Response) => {
+  try {
+    const result = subscriptionIdSchema.safeParse(req.params);
+
+    if (!result.success) {
+      const errors = result.error.issues.map((e) => e.message);
+
+      console.warn("Delete subscription failed", {
+        route: `/subscriptions/${req.params.id}`,
+        method: req.method,
+        errors: errors,
+      });
+      return sendError(res, 400, "VALIDATION_ERROR", "Invalid input", errors);
+    }
+
+    if (!req.userId) {
+      return sendError(res, 401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const subscription = await subscriptionService.cancelSubscription(
+      req.userId,
+      result.data.id,
+    );
+
+    if (!subscription) {
+      return sendError(res, 404, "NOT_FOUND", "Subscription not found");
+    }
+
+    return res.status(200).json(subscription);
+  } catch (error) {
+    console.error("Server failure", {
+      route: `/subscriptions/${req.params.id}`,
+      method: req.method,
+      error,
+    });
+    return sendError(res, 500, "SERVER_ERROR", "Server error");
+  }
+};
+
 export {
   createSubscription,
   getSubscriptions,
   getSubscriptionById,
   updateSubscription,
+  cancelSubscription,
 };
