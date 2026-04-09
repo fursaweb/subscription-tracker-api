@@ -30,6 +30,9 @@ class SubscriptionService {
     const subscriptions = await prisma.subscription.findMany({
       where: {
         userId,
+        NOT: {
+          status: "CANCELLED",
+        },
       },
       orderBy: {
         nextBillingDate: "asc",
