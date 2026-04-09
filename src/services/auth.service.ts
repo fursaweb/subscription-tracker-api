@@ -1,11 +1,11 @@
 import bcrypt from "bcrypt";
 import { prisma } from "../prisma";
-import tokenService from "./token-service";
+import tokenService from "./token.service";
 import {
   EmailAlreadyInUseError,
   InvalidCredentialsError,
   UnauthorizedError,
-} from "../errors/auth-errors";
+} from "../errors/auth.errors";
 import { config } from "../index";
 
 class AuthService {

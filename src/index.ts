@@ -5,13 +5,16 @@ import {
   login,
   refreshSession,
   logout,
-} from "./controllers/auth-controller";
-import { getProfile } from "./controllers/user-controller";
+} from "./controllers/auth.controller";
+import { getProfile } from "./controllers/user.controller";
 import {
   createSubscription,
   getSubscriptions,
-} from "./controllers/subscription-controller";
-import { authMiddleware } from "./middleware/auth-middleware";
+  getSubscriptionById,
+  updateSubscription,
+  cancelSubscription,
+} from "./controllers/subscription.controller";
+import { authMiddleware } from "./middleware/auth.middleware";
 
 dotenv.config();
 const jwtAccessSecret = process.env.JWT_ACCESS_SECRET;
@@ -41,6 +44,9 @@ app.post("/auth/logout", logout);
 
 app.post("/subscriptions", authMiddleware, createSubscription);
 app.get("/subscriptions", authMiddleware, getSubscriptions);
+app.get("/subscriptions/:id", authMiddleware, getSubscriptionById);
+app.patch("/subscriptions/:id", authMiddleware, updateSubscription);
+app.delete("/subscriptions/:id", authMiddleware, cancelSubscription);
 
 app.get("/me", authMiddleware, getProfile);
 

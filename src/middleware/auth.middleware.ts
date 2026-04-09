@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import tokenService from "../services/token-service";
-import { extractBearerToken } from "../helpers";
+import tokenService from "../services/token.service";
+import { extractBearerToken } from "../utils/extractBearerToken";
+import { sendError } from "../utils/sendError";
 
 export const authMiddleware = (
   req: Request,
@@ -10,13 +11,13 @@ export const authMiddleware = (
   const authorizationHeader = req.headers.authorization;
 
   if (!authorizationHeader || typeof authorizationHeader !== "string") {
-    return res.status(401).json({ error: "Unauthorized" });
+    return sendError(res, 401, "UNAUTHORIZED", "Unauthorized");
   }
 
   const accessToken = extractBearerToken(authorizationHeader);
 
   if (typeof accessToken !== "string") {
-    return res.status(401).json({ error: "Unauthorized" });
+    return sendError(res, 401, "UNAUTHORIZED", "Unauthorized");
   }
 
   const data = tokenService.validateAccessToken(accessToken);
@@ -27,7 +28,7 @@ export const authMiddleware = (
     typeof data.userId !== "string" ||
     typeof data.sessionId !== "string"
   ) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return sendError(res, 401, "UNAUTHORIZED", "Unauthorized");
   }
 
   req.userId = data.userId;
