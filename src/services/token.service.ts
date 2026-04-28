@@ -19,7 +19,7 @@ const isTokenPayload = (data: unknown): data is TokenPayload => {
 class TokenService {
   generateAccessToken(payload: TokenPayload): Token {
     const accessToken = jwt.sign(payload, config.jwtAccessSecret, {
-      expiresIn: "15m",
+      expiresIn: "60m",
     });
 
     return accessToken;

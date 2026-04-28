@@ -1,4 +1,4 @@
-import Decimal from "decimal.js";
+import { Prisma } from "@prisma/client";
 import {
   CreateSubscriptionInput,
   UpdateSubscriptionInput,
@@ -10,13 +10,11 @@ class SubscriptionService {
     userId: string,
     subscriptionData: CreateSubscriptionInput,
   ) {
-    const decimalAmount = new Decimal(subscriptionData.amount);
-
     const subscription = await prisma.subscription.create({
       data: {
         userId,
         name: subscriptionData.name,
-        amount: decimalAmount,
+        amount: new Prisma.Decimal(subscriptionData.amount),
         currency: subscriptionData.currency,
         billingCycle: subscriptionData.billingCycle,
         nextBillingDate: subscriptionData.nextBillingDate,
@@ -101,6 +99,40 @@ class SubscriptionService {
     });
 
     return subscription;
+  }
+
+  async getMonthlySpend(userId: string) {
+    const subscriptions = await prisma.subscription.findMany({
+      where: {
+        userId,
+        status: "ACTIVE",
+      },
+      select: {
+        billingCycle: true,
+        amount: true,
+        currency: true,
+      },
+    });
+
+    const map = new Map<string, Prisma.Decimal>();
+
+    for (const subscription of subscriptions) {
+      const monthlyAmount =
+        subscription.billingCycle === "YEARLY"
+          ? subscription.amount.div(12)
+          : subscription.amount;
+
+      const current = map.get(subscription.currency) ?? new Prisma.Decimal(0);
+
+      map.set(subscription.currency, current.plus(monthlyAmount));
+    }
+
+    return {
+      totals: Array.from(map, ([currency, amount]) => ({
+        currency,
+        amount: String(amount.toFixed(2)),
+      })),
+    };
   }
 }
 export default new SubscriptionService();
