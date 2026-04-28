@@ -209,10 +209,30 @@ const cancelSubscription = async (req: Request, res: Response) => {
   }
 };
 
+const getMonthlySpend = async (req: Request, res: Response) => {
+  try {
+    if (!req.userId) {
+      return sendError(res, 401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const { totals } = await subscriptionService.getMonthlySpend(req.userId);
+
+    return res.status(200).json({ totals });
+  } catch (error) {
+    console.error("Server failure", {
+      route: "/subscriptions/monthly-spend",
+      method: req.method,
+      error,
+    });
+    return sendError(res, 500, "SERVER_ERROR", "Server error");
+  }
+};
+
 export {
   createSubscription,
   getSubscriptions,
   getSubscriptionById,
   updateSubscription,
   cancelSubscription,
+  getMonthlySpend,
 };
