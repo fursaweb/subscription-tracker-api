@@ -4,6 +4,7 @@ import {
   UpdateSubscriptionInput,
 } from "../schemas/subscription.schema";
 import { prisma } from "../prisma";
+import { formatMoney } from "../utils/formatMoney";
 
 class SubscriptionService {
   async createSubscription(
@@ -130,9 +131,49 @@ class SubscriptionService {
     return {
       totals: Array.from(map, ([currency, amount]) => ({
         currency,
-        amount: String(amount.toFixed(2)),
+        amount: formatMoney(amount),
       })),
     };
+  }
+
+  async getUpcomingRenewals(userId: string) {
+    const UPCOMING_RENEWALS_DAYS = 7;
+
+    const startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(startDate);
+    endDate.setHours(23, 59, 59, 999);
+    endDate.setDate(endDate.getDate() + UPCOMING_RENEWALS_DAYS);
+
+    const renewals = await prisma.subscription.findMany({
+      where: {
+        userId,
+        status: "ACTIVE",
+        nextBillingDate: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        amount: true,
+        currency: true,
+        nextBillingDate: true,
+        billingCycle: true,
+      },
+      orderBy: {
+        nextBillingDate: "asc",
+      },
+    });
+
+    const formattedRenewals = renewals.map((renewal) => ({
+      ...renewal,
+      amount: formatMoney(renewal.amount),
+    }));
+
+    return { renewals: formattedRenewals };
   }
 }
 export default new SubscriptionService();
