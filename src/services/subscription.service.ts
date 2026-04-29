@@ -175,5 +175,47 @@ class SubscriptionService {
 
     return { renewals: formattedRenewals };
   }
+
+  async getSubscriptionCounts(userId: string) {
+    const [activeSubscriptionsCount, pausedSubscriptionsCount] =
+      await Promise.all([
+        prisma.subscription.count({
+          where: {
+            userId,
+            status: "ACTIVE",
+          },
+        }),
+        prisma.subscription.count({
+          where: {
+            userId,
+            status: "PAUSED",
+          },
+        }),
+      ]);
+
+    return {
+      activeSubscriptionsCount,
+      pausedSubscriptionsCount,
+    };
+  }
+
+  async getSummary(userId: string) {
+    const [
+      { activeSubscriptionsCount, pausedSubscriptionsCount },
+      { totals },
+      { renewals },
+    ] = await Promise.all([
+      this.getSubscriptionCounts(userId),
+      this.getMonthlySpend(userId),
+      this.getUpcomingRenewals(userId),
+    ]);
+
+    return {
+      activeSubscriptionsCount,
+      pausedSubscriptionsCount,
+      monthlySpend: totals,
+      upcomingRenewalsCount: renewals.length,
+    };
+  }
 }
 export default new SubscriptionService();
