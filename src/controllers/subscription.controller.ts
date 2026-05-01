@@ -3,6 +3,7 @@ import {
   createSubscriptionSchema,
   subscriptionIdSchema,
   updateSubscriptionSchema,
+  queryParamsSchema,
 } from "../schemas/subscription.schema";
 import subscriptionService from "../services/subscription.service";
 import { UnauthorizedError } from "../errors/auth.errors";
@@ -50,12 +51,26 @@ const createSubscription = async (req: Request, res: Response) => {
 
 const getSubscriptions = async (req: Request, res: Response) => {
   try {
+    const result = queryParamsSchema.safeParse(req.query);
+
+    if (!result.success) {
+      const errors = result.error.issues.map((e) => e.message);
+
+      console.warn("Query params validation failed", {
+        route: "/subscriptions",
+        method: req.method,
+        errors: result.error.issues.map((e) => e.message),
+      });
+      return sendError(res, 400, "VALIDATION_ERROR", "Invalid input", errors);
+    }
+
     if (!req.userId) {
       return sendError(res, 401, "UNAUTHORIZED", "Unauthorized");
     }
 
     const subscriptions = await subscriptionService.getSubscriptions(
       req.userId,
+      result.data,
     );
     return res.status(200).json(subscriptions);
   } catch (error) {

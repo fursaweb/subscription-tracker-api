@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import {
   CreateSubscriptionInput,
+  QueryParamsInput,
   UpdateSubscriptionInput,
 } from "../schemas/subscription.schema";
 import { prisma } from "../prisma";
@@ -25,20 +26,80 @@ class SubscriptionService {
     return subscription;
   }
 
-  async getSubscriptions(userId: string) {
-    const subscriptions = await prisma.subscription.findMany({
-      where: {
-        userId,
-        NOT: {
-          status: "CANCELLED",
+  async getSubscriptions(userId: string, queryParams: QueryParamsInput) {
+    const {
+      page,
+      limit,
+      order,
+      sortBy,
+      status,
+      billingCycle,
+      currency,
+      search,
+    } = queryParams;
+
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.SubscriptionWhereInput = {
+      userId,
+    };
+
+    if (status) {
+      where.status = status;
+    } else {
+      where.NOT = {
+        status: "CANCELLED",
+      };
+    }
+
+    if (currency) {
+      where.currency = currency;
+    }
+
+    if (billingCycle) {
+      where.billingCycle = billingCycle;
+    }
+
+    if (search) {
+      where.name = {
+        contains: search,
+        mode: "insensitive",
+      };
+    }
+
+    const [subscriptions, subscriptionsCount] = await Promise.all([
+      prisma.subscription.findMany({
+        where,
+        take: limit,
+        skip,
+        orderBy: {
+          [sortBy]: order,
         },
-      },
-      orderBy: {
-        nextBillingDate: "asc",
-      },
+      }),
+
+      prisma.subscription.count({
+        where,
+      }),
+    ]);
+
+    const totalPages = Math.ceil(subscriptionsCount / limit);
+
+    const formattedSubscriptions = subscriptions.map((subscription) => {
+      return {
+        ...subscription,
+        amount: formatMoney(subscription.amount),
+      };
     });
 
-    return subscriptions;
+    return {
+      items: formattedSubscriptions,
+      pagination: {
+        page,
+        limit,
+        totalItems: subscriptionsCount,
+        totalPages,
+      },
+    };
   }
 
   async getSubscriptionById(userId: string, id: string) {
