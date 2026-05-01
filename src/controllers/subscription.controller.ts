@@ -249,6 +249,25 @@ const getUpcomingRenewals = async (req: Request, res: Response) => {
   }
 };
 
+const getSummary = async (req: Request, res: Response) => {
+  try {
+    if (!req.userId) {
+      return sendError(res, 401, "UNAUTHORIZED", "Unauthorized");
+    }
+
+    const data = await subscriptionService.getSummary(req.userId);
+
+    return res.status(200).json(data);
+  } catch (error) {
+    console.error("Server failure", {
+      route: "/subscriptions/summary",
+      method: req.method,
+      error,
+    });
+    return sendError(res, 500, "SERVER_ERROR", "Server error");
+  }
+};
+
 export {
   createSubscription,
   getSubscriptions,
@@ -257,4 +276,5 @@ export {
   cancelSubscription,
   getMonthlySpend,
   getUpcomingRenewals,
+  getSummary,
 };

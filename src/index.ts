@@ -15,6 +15,7 @@ import {
   cancelSubscription,
   getMonthlySpend,
   getUpcomingRenewals,
+  getSummary,
 } from "./controllers/subscription.controller";
 import { authMiddleware } from "./middleware/auth.middleware";
 
@@ -52,6 +53,7 @@ app.get(
   authMiddleware,
   getUpcomingRenewals,
 );
+app.get("/subscriptions/summary", authMiddleware, getSummary);
 app.get("/subscriptions/:id", authMiddleware, getSubscriptionById);
 app.patch("/subscriptions/:id", authMiddleware, updateSubscription);
 app.delete("/subscriptions/:id", authMiddleware, cancelSubscription);
