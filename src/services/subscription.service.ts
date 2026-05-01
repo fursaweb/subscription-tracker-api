@@ -27,8 +27,16 @@ class SubscriptionService {
   }
 
   async getSubscriptions(userId: string, queryParams: QueryParamsInput) {
-    const { page, limit, order, sortBy, status, billingCycle, currency } =
-      queryParams;
+    const {
+      page,
+      limit,
+      order,
+      sortBy,
+      status,
+      billingCycle,
+      currency,
+      search,
+    } = queryParams;
 
     const skip = (page - 1) * limit;
 
@@ -50,6 +58,13 @@ class SubscriptionService {
 
     if (billingCycle) {
       where.billingCycle = billingCycle;
+    }
+
+    if (search) {
+      where.name = {
+        contains: search,
+        mode: "insensitive",
+      };
     }
 
     const [subscriptions, subscriptionsCount] = await Promise.all([

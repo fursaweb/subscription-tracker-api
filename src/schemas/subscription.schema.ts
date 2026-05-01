@@ -45,6 +45,7 @@ const queryParamsSchema = z.object({
   status: z.enum(status).optional(),
   currency: z.enum(currency).optional(),
   billingCycle: z.enum(billingCycle).optional(),
+  search: z.string().trim().optional(),
 });
 
 type CreateSubscriptionInput = z.infer<typeof createSubscriptionSchema>;
